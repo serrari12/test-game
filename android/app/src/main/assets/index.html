@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>야식 참는 기계</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html, body { margin: 0; }
+  [hidden] { display: none !important; }
+
+  /* layout: single-screen fridge-glow console — one slap button center-stage,
+     quote reveal as a stamped note card, tally ticking quietly in the header */
+  :root {
+    --bg: #eef1ee;
+    --surface: #ffffff;
+    --fg: #121714;
+    --muted: #5c6b65;
+    --accent: #ff6a3d;
+    --accent-ink: #1a0d06;
+    --tag-wise: #1f8f82;
+    --tag-savage: #e3483f;
+    --font-display: 'Black Han Sans', 'Noto Sans KR', sans-serif;
+    --font-body: 'Noto Sans KR', sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b1210;
+      --surface: #131d19;
+      --fg: #edf4f0;
+      --muted: #8fa29b;
+      --accent: #ff8a5c;
+      --accent-ink: #160c06;
+      --tag-wise: #4fcab9;
+      --tag-savage: #ff6b62;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b1210;
+    --surface: #131d19;
+    --fg: #edf4f0;
+    --muted: #8fa29b;
+    --accent: #ff8a5c;
+    --accent-ink: #160c06;
+    --tag-wise: #4fcab9;
+    --tag-savage: #ff6b62;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 28px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .tally {
+    font-size: 0.82rem;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid color-mix(in srgb, var(--fg) 10%, transparent);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .tally strong {
+    color: var(--fg);
+    font-weight: 700;
+  }
+
+  main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 18px;
+  }
+
+  .scene {
+    width: 86px;
+    height: 86px;
+  }
+  .scene svg { width: 100%; height: 100%; }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(1.7rem, 7vw, 2.3rem);
+    line-height: 1.25;
+    margin: 0;
+    text-wrap: balance;
+  }
+  h1 .flicker { color: var(--accent); }
+
+  .sub {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.98rem;
+    max-width: 30ch;
+  }
+
+  .name-row {
+    width: 100%;
+    max-width: 320px;
+  }
+  #nameInput {
+    width: 100%;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    padding: 11px 14px;
+    border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--fg) 16%, transparent);
+    background: var(--surface);
+    color: var(--fg);
+  }
+  #nameInput::placeholder { color: var(--muted); }
+  #nameInput:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  .cta {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    color: var(--accent-ink);
+    background: var(--accent);
+    border: none;
+    border-radius: 16px;
+    padding: 18px 30px;
+    width: 100%;
+    max-width: 320px;
+    cursor: pointer;
+    box-shadow: 0 10px 24px -10px color-mix(in srgb, var(--accent) 70%, transparent);
+    transition: transform 0.12s ease;
+  }
+  .cta:hover { transform: translateY(-1px); }
+  .cta:active { transform: translateY(1px) scale(0.99); }
+  .cta:focus-visible,
+  button:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .quote-card {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid color-mix(in srgb, var(--fg) 10%, transparent);
+    border-radius: 18px;
+    padding: 24px 22px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+  }
+  .quote-card.show {
+    animation: card-in 0.38s cubic-bezier(.2,.9,.3,1.3);
+  }
+  @keyframes card-in {
+    0% { opacity: 0; transform: translateY(10px) rotate(-1.5deg) scale(0.97); }
+    60% { opacity: 1; transform: translateY(-2px) rotate(0.8deg) scale(1.01); }
+    100% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .quote-card.show { animation: none; }
+  }
+
+  .tag {
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    padding: 4px 12px;
+    border-radius: 999px;
+    color: #fff;
+  }
+  .tag[data-kind="명언"] { background: var(--tag-wise); }
+  .tag[data-kind="팩폭"] { background: var(--tag-savage); }
+
+  .quote-text {
+    margin: 0;
+    font-size: 1.18rem;
+    line-height: 1.55;
+    font-weight: 700;
+    text-wrap: balance;
+    max-width: 26ch;
+  }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    margin-top: 4px;
+  }
+  .actions button {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 0.92rem;
+    padding: 12px 10px;
+    border-radius: 12px;
+    cursor: pointer;
+    border: 1px solid color-mix(in srgb, var(--fg) 14%, transparent);
+    background: transparent;
+    color: var(--fg);
+  }
+  #again {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+
+  .giveup-msg {
+    width: 100%;
+    background: color-mix(in srgb, var(--tag-savage) 14%, var(--surface));
+    border: 1px dashed color-mix(in srgb, var(--tag-savage) 55%, transparent);
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-size: 0.92rem;
+    color: var(--fg);
+    text-align: center;
+  }
+
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.78rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <span class="eyebrow">야식 결심 보조 장치</span>
+    <span class="tally" id="tally">오늘 참음 <strong id="todayCount">0</strong>회 · 누적 <strong id="totalCount">0</strong>회</span>
+  </header>
+
+  <main>
+    <div class="scene" aria-hidden="true">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M50 8C35 24 24 38 24 54a26 26 0 0052 0c0-16-11-30-26-46z"
+          fill="color-mix(in srgb, var(--accent) 22%, transparent)"
+          stroke="var(--accent)" stroke-width="3" stroke-linejoin="round"/>
+        <circle cx="50" cy="58" r="9" fill="var(--accent)"/>
+      </svg>
+    </div>
+
+    <h1>지금 야식이<br><span class="flicker">땡긴다</span>...</h1>
+    <p class="sub">눌러보세요. 누군가는 한마디 해줘야 할 때니까요.</p>
+
+    <div class="name-row">
+      <input id="nameInput" type="text" maxlength="12" placeholder="이름을 입력하면 더 따갑게 불러드려요" aria-label="이름">
+    </div>
+
+    <button class="cta" id="hitme">그래, 한마디 해봐</button>
+
+    <div class="quote-card" id="card" hidden>
+      <span class="tag" id="tag">명언</span>
+      <p class="quote-text" id="quoteText"></p>
+      <div class="actions">
+        <button id="again">한 번 더 맞고싶다</button>
+        <button id="giveup">그래도 먹을래</button>
+      </div>
+    </div>
+
+    <div class="giveup-msg" id="giveupMsg" hidden></div>
+  </main>
+
+  <footer>이 순간만 넘기면, 내일 아침의 내가 고마워할 거예요.</footer>
+</div>
+
+<script>
+(function () {
+  var QUOTES = [
+    { kind: '명언', text: '배는 고픈 게 아니라 심심한 거다.' },
+    { kind: '명언', text: '자정의 식욕은 내일 아침의 자신감을 빌려 쓰는 것이다.' },
+    { kind: '명언', text: '라면 국물은 뜨겁지만, 후회는 더 뜨겁다.' },
+    { kind: '명언', text: '지금의 허기는 위가 아니라 눈이 느끼는 것.' },
+    { kind: '명언', text: '야식은 오늘의 즐거움, 내일의 숙제.' },
+    { kind: '명언', text: '참을성은 냉장고 문을 닫는 손끝에서 시작된다.' },
+    { kind: '명언', text: '배고픔은 파도처럼 왔다가 반드시 지나간다.' },
+    { kind: '명언', text: '오늘 밤의 유혹은 내일 거울 앞에서 다시 만난다.' },
+    { kind: '명언', text: '진짜 배고픔은 물 한 잔도 못 이긴다.' },
+    { kind: '명언', text: '자제력도 근육이다. 지금 한 번 더 버티면 커진다.' },
+    { kind: '명언', text: '먹는 건 1분, 후회는 1주일.' },
+    { kind: '명언', text: '이 시간에 먹는 건 음식이 아니라 핑계다.' },
+    { kind: '명언', text: '오늘 참은 나는, 내일 더 가벼운 나다.' },
+    { kind: '명언', text: '배고픔을 견디는 게 아니라, 그냥 10분만 버티면 된다.' },
+    { kind: '명언', text: '몸은 지금 자고 싶다는데, 입만 혼자 깨어있다.' },
+    { kind: '명언', text: '밤의 유혹은 아침의 거울보다 목소리가 크지만, 거짓말을 더 잘한다.' },
+    { kind: '명언', text: '배고픔의 90%는 눈으로, 10%는 위로 느낀다.' },
+    { kind: '명언', text: '참는 것도 습관이 되면 더 이상 참는 게 아니다.' },
+    { kind: '명언', text: '오늘 하루의 선택이 내일의 몸을 만든다.' },
+    { kind: '명언', text: '졸린 몸을 배고픈 몸으로 착각하지 마라.' },
+    { kind: '명언', text: '야식의 유혹은 10분을 넘기면 반드시 사그라든다.' },
+    { kind: '명언', text: '자신과의 약속을 지키는 밤이, 가장 단단한 밤이다.' },
+    { kind: '명언', text: '먹고 싶은 마음은 손님이다. 문을 열어줄 필요는 없다.' },
+    { kind: '명언', text: '허기가 아니라 지루함일 때가 더 많다.' },
+    { kind: '명언', text: '지금 참은 선택이 내일의 자신감이 된다.' },
+    { kind: '명언', text: '밤에 먹는 위로는 아침에 두 배로 갚아야 한다.' },
+    { kind: '명언', text: '몸이 쉬어야 할 시간에 위장을 깨우지 마라.' },
+    { kind: '명언', text: '배고픔은 손님처럼 왔다가, 물 한잔에도 돌아간다.' },
+    { kind: '명언', text: '참을 수 없다고 느끼는 순간이, 가장 참아야 할 순간이다.' },
+    { kind: '명언', text: '오늘의 공복이 내일의 선명함이다.' },
+    { kind: '팩폭', text: '배고픈 게 아니라 그냥 의지가 약한 거야. 솔직히 인정해.' },
+    { kind: '팩폭', text: '그 라면 하나, 오늘 운동 두 시간 한 거 전부 무효로 만든다.' },
+    { kind: '팩폭', text: '지금 그거 먹으면, 어제 한 다짐은 그냥 거짓말이 되는 거야.' },
+    { kind: '팩폭', text: '냉장고 열기 전에 거울부터 봐라. 그게 더 빠르다.' },
+    { kind: '팩폭', text: '배고픈 거 아니고 그냥 기분이 허한 거야. 음식으로 못 채워.' },
+    { kind: '팩폭', text: '야식 먹고 자면 위는 밤새 일하고, 네 각오는 밤새 죽는다.' },
+    { kind: '팩폭', text: '그거 먹으면 내일 아침 거울 보고 네가 제일 먼저 실망할 거다.' },
+    { kind: '팩폭', text: '몸은 거짓말을 못 해. 지금 먹은 거, 결국 다 티 난다.' },
+    { kind: '팩폭', text: '습관이라고 핑계 대지 마. 습관은 네가 만든 거고, 네가 끊을 수 있는 거야.' },
+    { kind: '팩폭', text: '그 한입으로 다이어트는 오늘부터 다시 1일이다. 이게 몇 번째냐.' },
+    { kind: '팩폭', text: '진짜 배고픈 거면 물 마시고 버텨져. 안 버텨지면 그냥 식탐이다.' },
+    { kind: '팩폭', text: '치킨 시키기 전에 작년 옷 입어봐. 안 맞으면 그 손 치워라.' },
+    { kind: '팩폭', text: '지금 먹는 건 너고, 치우는 것도 내일의 너야. 떠넘기지 마.' },
+    { kind: '팩폭', text: '그 돈이면 내일 더 나은 몸으로 살 수 있는데, 지금 그걸 날리는 거다.' },
+    { kind: '팩폭', text: '그 숟가락 드는 순간, 오늘 다짐한 너는 그냥 사라지는 거야.' },
+    { kind: '팩폭', text: '그거 시킬 돈 아껴서 내일 제대로 된 거 먹어. 지금은 그냥 낭비다.' },
+    { kind: '팩폭', text: '야식 먹고 자면 얼굴 붓는 거 알면서 또 시키네.' },
+    { kind: '팩폭', text: '배고픈 거 아니라 눈이 먼저 먹자고 조르는 거야. 폰 끄고 자.' },
+    { kind: '팩폭', text: '그 한입이 2주치 노력을 그냥 무너뜨린다. 그게 말이 되냐.' },
+    { kind: '팩폭', text: '지금 먹으면 내일 숨 차는 건 운동이 아니라 숨쉬기만 해도 그렇다.' },
+    { kind: '팩폭', text: '핑계 그만 대. 배가 고픈 게 아니라 그냥 참기가 싫은 거야.' },
+    { kind: '팩폭', text: '그거 먹을 시간에 물 마시고 이 닦고 누워. 그거면 끝나는 유혹이다.' },
+    { kind: '팩폭', text: '진짜 배고프면 밥을 먹지, 왜 꼭 제일 살찌는 걸 고르냐.' },
+    { kind: '팩폭', text: '참으면 내일 당당하고, 먹으면 내일 핑계거리 하나 더 생긴다.' },
+    { kind: '팩폭', text: '살은 너한테 안 물어본다. 그냥 붙고, 넌 그제서야 후회한다.' },
+    { kind: '팩폭', text: '그 5분짜리 만족이, 몇 주짜리 노력을 날린다는 거 몰라서 먹냐.' },
+    { kind: '팩폭', text: '배가 아니라 마음이 허한 거다. 근데 그걸 음식으로 채우면 두 배로 빈다.' },
+    { kind: '팩폭', text: '그거 먹고 자면 내일 속이, 그리고 네 멘탈이 같이 너한테 복수한다.' },
+    { kind: '팩폭', text: '그 손, 어제 운동한 손 맞아? 그럼 그 손으로 숟가락부터 내려놔.' },
+    { kind: '팩폭', text: '참은 오늘이 쌓여야 몸이 바뀐다. 먹은 오늘은 그냥 제자리다.' }
+  ];
+
+  var GIVEUP_LINES = [
+    '그래, 먹어라. 대신 내일 아침엔 핑계 대지 말기.',
+    '먹는 건 네 선택이다. 다만 이 순간을 기억은 해둬.',
+    '좋아, 먹어. 근데 다음엔 10분만 더 버텨보자.',
+    '알겠어. 먹고, 내일은 꼭 다시 눌러봐.'
+  ];
+
+  var STORAGE_KEY = 'yasik-stopper-v1';
+  var state = { total: 0, giveup: 0, today: 0, date: '', name: '' };
+
+  function todayStr() {
+    var d = new Date();
+    return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+  }
+
+  function loadState() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) state = Object.assign(state, JSON.parse(raw));
+    } catch (e) {}
+    if (state.date !== todayStr()) {
+      state.date = todayStr();
+      state.today = 0;
+    }
+  }
+
+  function saveState() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function renderTally() {
+    document.getElementById('todayCount').textContent = state.today;
+    document.getElementById('totalCount').textContent = state.total;
+  }
+
+  var lastIndex = -1;
+  function pickQuote() {
+    var i;
+    do { i = Math.floor(Math.random() * QUOTES.length); } while (i === lastIndex && QUOTES.length > 1);
+    lastIndex = i;
+    return QUOTES[i];
+  }
+
+  var card = document.getElementById('card');
+  var tagEl = document.getElementById('tag');
+  var textEl = document.getElementById('quoteText');
+  var giveupMsg = document.getElementById('giveupMsg');
+  var nameInput = document.getElementById('nameInput');
+
+  function showQuote(countsAsResist) {
+    giveupMsg.hidden = true;
+    var q = pickQuote();
+    tagEl.textContent = q.kind;
+    tagEl.setAttribute('data-kind', q.kind);
+    var prefix = '';
+    if (state.name) {
+      prefix = q.kind === '팩폭' ? state.name + '님아, ' : state.name + '님, ';
+    }
+    textEl.textContent = prefix + q.text;
+    card.hidden = false;
+    card.classList.remove('show');
+    void card.offsetWidth;
+    card.classList.add('show');
+
+    if (countsAsResist) {
+      state.today += 1;
+      state.total += 1;
+      saveState();
+      renderTally();
+    }
+  }
+
+  document.getElementById('hitme').addEventListener('click', function () {
+    showQuote(true);
+  });
+  document.getElementById('again').addEventListener('click', function () {
+    showQuote(true);
+  });
+  document.getElementById('giveup').addEventListener('click', function () {
+    state.giveup += 1;
+    saveState();
+    card.hidden = true;
+    giveupMsg.hidden = false;
+    giveupMsg.textContent = GIVEUP_LINES[Math.floor(Math.random() * GIVEUP_LINES.length)];
+  });
+
+  loadState();
+  renderTally();
+  nameInput.value = state.name || '';
+  nameInput.addEventListener('input', function () {
+    state.name = nameInput.value.trim();
+    saveState();
+  });
+})();
+</script>
+</body>
+</html>
